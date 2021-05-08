@@ -1,11 +1,5 @@
 version: '3.2'
 services:
-  oh-social:
-    links:
-    - postgres:postgres
-    - redis
-    env_file:
-    - ./.npmrc.dev
   postgres:
     image: postgres
     ports:

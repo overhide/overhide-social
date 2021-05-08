@@ -37,8 +37,6 @@ db.connect();
   }
   await db.query('CREATE UNIQUE INDEX ON socials (emailhash, provider);');
 
-  await seed();
-
   process.exit(0);
 
 })().catch((err) => {

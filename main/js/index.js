@@ -74,11 +74,12 @@ const ctx_config = {
 };
 const log = require('./lib/log.js').init(ctx_config).fn("app");
 const debug = require('./lib/log.js').init(ctx_config).debug_fn("app");
-const crypto = require('./lib/crypto.js').init();
+const crypto = require('./lib/crypto.js').init(ctx_config);
 const database = require('./lib/database.js').init(ctx_config);
 const swagger = require('./lib/swagger.js').init(ctx_config);
 const auth = require('./lib/auth.js').init(ctx_config);
-const karnet = require('./lib/karnet.js').init(ctx_config);
+const karnets = require('./lib/karnets.js').init(ctx_config);
+const service = require('./lib/service.js').init(ctx_config);
 const token = require('./lib/token.js').check.bind(require('./lib/token.js').init(ctx_config));
 const throttle = require('./lib/throttle.js').check.bind(require('./lib/throttle.js').init(ctx_config));
 log("CONFIG:\n%O", ((cfg) => {
@@ -160,9 +161,7 @@ app.get('/swagger.json', throttle, (req, res) => {
  *            [https://token.overhide.io](https://token.overhide.io).
  */
 app.get('/redirect',  async (req, res, next) => {
-  const code = req.query['code'];
-  const karnet = req.query['state'];
-  next();
+  await service.redirect(req, res, next);
 });
 
 /**
@@ -299,8 +298,9 @@ function onSignal() {
 async function onHealthCheck() {
   const authMetrics = auth.metrics();
   const dbError = await database.getError();
-  const karnetMetrics = await karnet.metrics();
-  var healthy = authMetrics.errorsDelta === 0 && dbError;
+  const karnetMetrics = await karnets.metrics();
+  const serviceMetrics = await service.metrics();  
+  var healthy = authMetrics.errorsDelta === 0 && !dbError;
   if (!healthy) {
     let reason = `onHealthCheck failed (authMetrics.errorsDelta: ${authMetrics.errorsDelta})(db.error: ${dbError})`;
     log(reason);
@@ -311,7 +311,8 @@ async function onHealthCheck() {
     version: VERSION,
     database: 'OK',
     auth: authMetrics,
-    karnet: karnetMetrics
+    karnet: karnetMetrics,
+    serivce: serviceMetrics
   };
   return status;
 }

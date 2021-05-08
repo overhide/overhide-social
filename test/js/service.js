@@ -9,23 +9,48 @@ const POSTGRES_DB = process.env.POSTGRES_DB || process.env.npm_config_POSTGRES_D
 const POSTGRES_USER = process.env.POSTGRES_USER || process.env.npm_config_POSTGRES_USER || process.env.npm_package_config_POSTGRES_USER || 'adam';
 const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD || process.env.npm_config_POSTGRES_PASSWORD || process.env.npm_package_config_POSTGRES_PASSWORD || 'c0c0nut';
 const POSTGRES_SSL = process.env.POSTGRES_SSL || process.env.npm_config_POSTGRES_SSL || process.env.npm_package_config_POSTGRES_SSL;
-const SELECT_MAX_ROWS = process.env.SELECT_MAX_ROWS || process.env.npm_config_SELECT_MAX_ROWS || process.env.npm_package_config_SELECT_MAX_ROWS || 30;
+
+const SALT = process.env.SALT || process.env.npm_config_SALT || process.env.npm_package_config_SALT || 'salt';
+
+const AUTH_TOKEN_URL = process.env.AUTH_TOKEN_URL || process.env.npm_config_AUTH_TOKEN_URL || process.env.npm_package_config_AUTH_TOKEN_URL || 'https://token';
+const AUTH_CLIENT_ID = process.env.AUTH_CLIENT_ID || process.env.npm_config_AUTH_CLIENT_ID || process.env.npm_package_config_AUTH_CLIENT_ID || 'clientId';
+const AUTH_CLIENT_SECRET = process.env.AUTH_CLIENT_SECRET || process.env.npm_config_AUTH_CLIENT_SECRET || process.env.npm_package_config_AUTH_CLIENT_SECRET || 'clientSecret';
+const AUTH_REDIRECT_URI = process.env.AUTH_REDIRECT_URI || process.env.npm_config_AUTH_REDIRECT_URI || process.env.npm_package_config_AUTH_REDIRECT_URI || 'https://localhost:8120/redirect';
+const KEYV_URI = process.env.KEYV_URI || process.env.npm_config_KEYV_URI || process.env.npm_package_config_KEYV_URI || 'redis://localhost:6379';
+const KEYV_KARNETS_NAMESPACE = process.env.KEYV_KARNETS_NAMESPACE || process.env.npm_config_KEYV_KARNETS_NAMESPACE || process.env.npm_package_config_KEYV_KARNETS_NAMESPACE || 'karnets';
+const KEYV_KARNETS_TTL_MILLIS = process.env.KEYV_KARNETS_TTL_MILLIS || process.env.npm_config_KEYV_KARNETS_TTL_MILLIS || process.env.npm_package_config_KEYV_KARNETS_TTL_MILLIS || 120000;
+
+// good token below:
+//
+// {
+//   "alg": "HS256",
+//   "typ": "JWT"
+// }.{
+//   "sub": "1234567890",
+//   "name": "John Doe",
+//   "iat": 1516239022,
+//   "emails": [
+//     "foo@bar.com"
+//   ],
+//   "idp": "live.com"
+// }.[Signature]
 
 mock('node-fetch', async (url) => {
-  if (url.match(/all_txs/)) {
+  if (url.match(/token.*goodCode/)) {
     return {
       status: 200,
       text: async () => 'OK',
       json: async () => {
+        id_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJlbWFpbHMiOlsiZm9vQGJhci5jb20iXSwiaWRwIjoibGl2ZS5jb20ifQ.43i8B6VywQv973oJoy5GF2C3hAHnlhB5XJbVpmMZjPo'
       }
     };
   }
-  if (url.match(/twentyfive.*chain/)) {
+  if (url.match(/token.*badCode/)) {
     return {
-      status: 200,
-      text: async () => 'OK',
+      status: 400,
+      text: async () => 'invalid_grant',
       json: async () => {
-        return [];
+        return {error: 'invlaid_grant'};
       }
     };
   }
@@ -36,19 +61,31 @@ function roundToHour(epochTime) {
   return Math.floor(epochTime / hour) * hour;
 }
 
-require('../../main/js/lib/log.js').init({app_name:'smoke'});
-const database = require('../../main/js/lib/database.js').init({
+const ctx_config = {
   pghost: POSTGRES_HOST,
   pgport: POSTGRES_PORT,
   pgdatabase: POSTGRES_DB,
   pguser: POSTGRES_USER,
   pgpassword: POSTGRES_PASSWORD,
   pgssl: POSTGRES_SSL,
-  select_max_rows: SELECT_MAX_ROWS
-});
-const timestamp = require('../../main/js/lib/timestamp.js').init();
-const rates = require('../../main/js/lib/rates.js').init();
-const service = require('../../main/js/lib/service.js').init();
+  salt: SALT,
+  authTokenUrl: AUTH_TOKEN_URL,
+  authClientId: AUTH_CLIENT_ID,
+  authClientSecret: AUTH_CLIENT_SECRET,
+  authRedirectUri: AUTH_REDIRECT_URI,
+  keyvUri: KEYV_URI,
+  keyvKarnetsNamespace: KEYV_KARNETS_NAMESPACE,
+  keyvKarnetsTtlMillis: KEYV_KARNETS_TTL_MILLIS  
+};
+
+require('../../main/js/lib/log.js').init({app_name:'smoke'});
+const crypto = require('../../main/js/lib/crypto.js').init(ctx_config);
+const database = require('../../main/js/lib/database.js').init(ctx_config);
+const auth = require('../../main/js/lib/auth.js').init(ctx_config);
+const karnets = require('../../main/js/lib/karnets.js').init(ctx_config);
+const service = require('../../main/js/lib/service.js').init(ctx_config);
+
+const goodKarnet = `karnet_${new Date()}`;
 
 describe('service tests', () => {
 
@@ -56,124 +93,25 @@ describe('service tests', () => {
   /* The tests. */
   /**************/
 
-  it('should get() smoke', (done) => {
+  it('should get token, register new secret, cache karnet, and return page raising oh$-login-success event', (done) => {
     (async () => {
 
       req = {
-        params: {
-          currency: 'eth',
-          timestamps: (new Date(baseTime)).toISOString()
+        query: {
+          code: 'goodCode',
+          state: goodKarnet
         }
       }
 
       res = {
-        status: (code) => {
-          return {
-            send: (result) => {
-              if (code == 200)  {
-                assert.isTrue(result.length == 1);
-                assert.isTrue(result[0].timestamp == baseTime);
-                assert.isTrue(result[0].minrate == 6);
-                assert.isTrue(result[0].maxrate == 8);
-                done();
-              };    
-            }
-          }
-        }        
+        render: (template, opts) => {
+          assert.isTrue(/login-success.html/.test(template));
+          done();
+        }
       }
   
-      resultAsTuples = await service.get(req, res);
+      service.redirect(req, res, () => {});
     })();
   });
-
-  it('should get() smoke -- multiple timestamps', (done) => {
-    (async () => {
-
-      req = {
-        params: {
-          currency: 'eth',
-          timestamps: (new Date(baseTime)).toISOString() + ',' + (new Date(baseTime - hour * 2)).toISOString() + ',' + (new Date(baseTime - hour * 3)).toISOString()
-        }
-      }
-
-      res = {
-        status: (code) => {
-          return {
-            send: (result) => {
-              if (code == 200)  {
-                assert.isTrue(result.length == 3);
-                assert.isTrue(result.some(r => r.timestamp == baseTime && r.minrate == 6 && r.maxrate == 8));
-                assert.isTrue(result.some(r => r.timestamp == (baseTime - hour * 2) && r.minrate == 1 && r.maxrate == 7));
-                assert.isTrue(result.some(r => r.timestamp == (baseTime - hour * 3) && r.minrate == 1 && r.maxrate == 6));
-                done();
-              };    
-            }
-          }
-        }        
-      }
-  
-      resultAsTuples = await service.get(req, res);
-    })();
-  });
-
-  it('should tallyMin() smoke -- multiple timestamps', (done) => {
-    (async () => {
-
-      req = {
-        params: {
-          currency: 'eth',
-          values: 
-            '0.5@' + (new Date(baseTime)).toISOString()                  // 1/2  ether
-            + ',0.25@' + (new Date(baseTime - hour * 2)).toISOString()    // 1/4  ether
-            + ',0.1@' + (new Date(baseTime - hour * 3)).toISOString()    // 1/10 ether
-        }
-      }
-
-      res = {
-        status: (code) => {
-          return {
-            send: (result) => {
-              if (code == 200)  {
-                assert.isTrue(result == 3.35);                 
-                done();
-              };    
-            }
-          }
-        }        
-      }
-  
-      resultAsTuples = await service.tallyMin(req, res);
-    })();
-  });
-
-  it('should tallyMax() smoke -- multiple timestamps', (done) => {
-    (async () => {
-
-      req = {
-        params: {
-          currency: 'wei',
-          values: 
-            '500000000000000000@' + (new Date(baseTime)).toISOString()                  // 1/2  ether
-            + ',250000000000000000@' + (new Date(baseTime - hour * 2)).toISOString()    // 1/4  ether
-            + ',100000000000000000@' + (new Date(baseTime - hour * 3)).toISOString()    // 1/10 ether
-        }
-      }
-
-      res = {
-        status: (code) => {
-          return {
-            send: (result) => {
-              if (code == 200)  {  
-                assert.isTrue(result == 6.35);               
-                done();
-              };    
-            }
-          }
-        }        
-      }
-  
-      resultAsTuples = await service.tallyMax(req, res);
-    })();
-  });  
 })
 

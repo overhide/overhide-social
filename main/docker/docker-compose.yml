@@ -1,12 +1,1 @@
 version: '3.2'
-services:
-  oh-social:
-    build: 
-      context: .
-      dockerfile: ./main/docker/Dockerfile
-    image: oh-social
-    container_name: oh-social
-    ports:
-    - "8120:8120"
-    command: > 
-      sh -c "npm run start"

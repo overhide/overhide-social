@@ -15,6 +15,7 @@ jobs:
             printf "POSTGRES_DB=oh-social\n" >> .npmrc.dev;
             printf "POSTGRES_USER=adam\n" >> .npmrc.dev;
             printf "POSTGRES_PASSWORD=c0c0nut\n" >> .npmrc.dev;
+            printf "KEYV_URI=redis://redis:6379\n" >> .npmrc.dev;
             cat .npmrc.dev   
       - run:
           shell: /bin/sh
@@ -22,21 +23,6 @@ jobs:
       - run:
           shell: /bin/sh
           command: docker exec `docker ps -q --filter name="oh-social"` npm run db-evolve
-      - run:
-          shell: /bin/sh
-          command: docker-compose -f main/docker/docker-compose.yml -f main/docker/docker-compose.dev.yml --project-directory . --project-name oh kill oh-social
-      - run:
-          shell: /bin/sh
-          command: docker system prune -f
-      - run:
-          shell: /bin/sh
-          command: docker-compose -f main/docker/docker-compose.yml -f main/docker/docker-compose.dev.yml --project-directory . --project-name oh run -v ~/overhide-social/test-report:/home/node/app/test-report -d oh-social
-      - run:
-          shell: /bin/sh
-          command: sleep 10
-      - run:
-          shell: /bin/sh
-          command: docker ps -a
       - run:
           shell: /bin/sh
           command: docker exec `docker ps -q --filter name="oh-social"` npm run test-report

@@ -46,7 +46,7 @@ class Karnets {
     if (!salt) throw new Error("SALT must be specified.");
     if (!keyvUri) log("WARNING:  KEYV_URI not be specified--using in-memory store");
     if (!keyvKarnetsNamespace) throw new Error("KEYV_KARNETS_NAMESPACE must be specified.")
-    if (!keyv_karnets_ttl_millis) throw new Error("KEYV_KARNETS_TTL_MILLIS must be specified.")
+    if (!keyvKarnetsTtlMillis) throw new Error("KEYV_KARNETS_TTL_MILLIS must be specified.")
 
     this[ctx] = {
       salt: salt,
@@ -57,7 +57,7 @@ class Karnets {
 
     this[ctx].keyv = this[getKeyv]();
 
-    this[ctx].metrics = {
+    this[metrics] = {
       hit: 0,
       miss: 0
     };

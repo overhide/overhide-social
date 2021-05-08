@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="0.003" tests="1" failures="0">
+  <testsuite name="Root Suite" timestamp="2021-05-08T23:39:16" tests="0" failures="0" time="0">
+  </testsuite>
+  <testsuite name="service tests" timestamp="2021-05-08T23:39:16" tests="1" file="C:\jj\src\overhide-social\test\js\service.js" failures="0" time="0.003">
+    <testcase name="service tests should get token, register new secret, cache karnet, and return page raising oh$-login-success event" time="0.003" classname="should get token, register new secret, cache karnet, and return page raising oh$-login-success event">
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -8,6 +8,9 @@ const jwt_decode = require('jwt-decode');
 const ctx = Symbol('context');
 const metrics = Symbol('metrics');
 
+// private functions
+const checkInit = Symbol('checkInit');
+
 /**
  * Wires up functionality we use throughout.
  * 
@@ -37,7 +40,7 @@ class Auth {
    * @param {stirng} authRedirectUri
    * @returns {Token} this
    */
-  init({authTokenUrl, authClientId, authRedirectUri} = {}) {
+  init({authTokenUrl, authClientId, authClientSecret, authRedirectUri} = {}) {
     if (authTokenUrl == null) throw new Error("AUTH_TOKEN_URL must be specified.");
     if (authClientId == null) throw new Error("AUTH_CLIENT_ID must be specified.");
     if (authClientSecret == null) throw new Error("AUTH_CLIENT_SECRET must be specified.");
