@@ -80,10 +80,11 @@ class Karnets {
    * @param {string} karnet 
    * @param {string} secret
    */
-   async retargetSubscriber(karnet, secret) {
+   async setSecret(karnet, secret) {
     this[checkInit]();
     debug(`store secret for ${karnet}`);
-    await this[ctx].keyv.set(karnet, crypto.symmetricEncrypt(secret, this[ctx].salt),this[ctx].ttl);
+    const encrypted = crypto.symmetricEncrypt(secret, this[ctx].salt);
+    await this[ctx].keyv.set(karnet, encrypted,this[ctx].ttl);
   }
 
   /**
@@ -94,11 +95,12 @@ class Karnets {
    */
   async getSecret(karnet) {
     this[checkInit]();
-    let val = await this[ctx].keyv.get(karnet);
+    const val = await this[ctx].keyv.get(karnet);
     if (val) {
       this[metrics].hit++;
       debug(`got secret for karnet ${karnet}`);
-      return crypto.symmetricDecrypt(val, this[ctx].salt);
+      const decrypted = crypto.symmetricDecrypt(val, this[ctx].salt);
+      return decrypted.toString();
     } else {
       this[metrics].miss++;
       debug(`missed secret for karnet ${karnet}`);

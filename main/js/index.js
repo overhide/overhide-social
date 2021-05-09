@@ -116,49 +116,35 @@ app.get('/swagger.json', throttle, (req, res) => {
  * @swagger
  * /redirect:
  *   get:
- *     summary: Retrieve exchange rates between a currency and US dollars.
+ *     summary: AAD B2C redirect endpoint.
  *     description: | 
- *       Retrieve minimum and maximum exchange rates between a currency and US dollars at a number of ISO 8601 parsable UTC time-stamps (with 'Z' at end).
+ *       Endpoint authentication from AAD B2C will redirect to.
  * 
- *       Each time-stamp is considered an end of a 3 hour time-window sampled for a minimum and maximum exchange rate between `currency` and US dollars.
+ *       The passed in client `karnet` (token) GUID is remembered for 2 minutes:  call the `sign` endpoint within that time to get a signature and the
+ *       stored address.
  * 
- *       Rate limits:  30 calls / minute / IP (across all overhide APIs)
+ *       If this redirect is for a new email/provider combination (new login to the system), it will genereate the credentials for signing.
  *     parameters:
  *       - in: query
- *         name: currency
+ *         name: code
  *         required: true
  *         schema:
  *           type: string
  *         description: |
- *            Currency to retrieve conversion rate "from" &mdash; to US dollars.
- * 
- *            Supported currencies:
- * 
- *              * "eth" -- ethers
- *              * "wei" -- ethereum `wei`
- *              * "btc" -- bitcoin
- *              * "sat" -- bitcoin `satoshis`
+ *            Authorization code to pass to `token` endpoint.
  *       - in: query
- *         name: timestamps
+ *         name: state
  *         required: true
  *         schema:
  *           type: string
  *         description: |
- *            Comma separated list of ISO 8601 UTC time-stamps matching the pattern 'YYYY-MM-DDThh:mm:ss.fffZ'
- * 
- *            Each time-stamp is a string in [ISO 8601/RFC3339 format](https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14).
+ *            The client `karnet` (token), a GUID.
  *     produces:
  *       - application/json
  *     responses:
  *       200:
  *         description: |
- *           JSON list of objects `[{timestamp: <UNIX time (epoch) millis>, minrate: <float>, maxrate: <float>},..]` whereby `minrate` indicates
- *           the lowest conversion rate between *currency* and USD seen within a time window (configurable by service) until the `timestamp`
- *           and `maxrate` indicates the highest conversion rate within same.
- *       401:
- *         description: |
- *            These APIs require bearer tokens to be furnished in an 'Authorization' header as 'Bearer ..' values.  The tokens are to be retrieved from
- *            [https://token.overhide.io](https://token.overhide.io).
+ *           An HTML page that either raises the `oh$-login-failed` event upon login failure or the `oh$-login-success` event on login success.
  */
 app.get('/redirect',  async (req, res, next) => {
   await service.redirect(req, res, next);
@@ -166,122 +152,58 @@ app.get('/redirect',  async (req, res, next) => {
 
 /**
  * @swagger
- * /tallymin/{currency}/{values}:
+ * /sign:
  *   get:
- *     summary: Retrieve a tally in US dollars converted at a minimum estimated exchange-rate from a stream of time-stamped-values in the provided currency.
+ *     summary: Pass in the client `karnet` (token) GUID and a `message` to sign -- signs the message with credentials tracked by this service for the previously logged in `karnet`.
  *     description: | 
- *       Retrieve a tally in US dollars converted at a minimum estimated exchange-rate from a stream of time-stamped-values.  A time-stamped-value is
- *       a value transfer at some time-stamp.  There is a certain exchange-rate between `currency` and US dollars at each particular time-stamp.  The
- *       exchange rate fluctuates and may have been different within some time-window before the transaction.  This call will take the lowest known
- *       exchange rate during the time-window leading up to a transaction and apply it to the transaction.  Each transaction has its own unique
- *       exchange rate as it has its own unique time-window.
- * 
- *       The result is a minimum converted value in US dollars.
- * 
- *       At present this services uses a time-window of 3 hours leading up to each transaction.  
+ *       Pass in the client `karnet` (token) GUID and a `message` to sign -- signs the message with credentials tracked by this service for the previously 
+ *       logged in `karnet`.
  * 
  *       Rate limits:  30 calls / minute / IP (across all overhide APIs)
  *     parameters:
- *       - in: path
- *         name: currency
+ *       - in: query
+ *         name: karnet
  *         required: true
  *         schema:
  *           type: string
  *         description: |
- *            Currency and denomination of the time-stamped-values.
- * 
- *            Supported currencies/denominations:
- * 
- *              * "eth" -- ethers
- *              * "wei" -- ethereum `wei`
- *              * "btc" -- bitcoin
- *              * "sat" -- bitcoin `satoshis`
- *       - in: path
- *         name: values
+ *           The client `karnet` (token) GUID that is logged in and has credentials stored by this service.
+ *       - in: query
+ *         name: message
  *         required: true
  *         schema:
  *           type: string
  *         description: |
- *            Comma separated list of ISO 8601 UTC time-stamps matching the pattern 'YYYY-MM-DDThh:mm:ss.fffZ' prefixed with a `<amount>@`
- *            `currency` value.  E.g. `1200000000000000000@2020-01-04T11:00:00.000Z` for a currency of `wei` signifies a transaction of 1.2 ethers
- *            on April first at 11 (UTC).            
- * 
- *            Each time-stamp is a string in [ISO 8601/RFC3339 format](https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14).
+ *           The message to sign, base64 encoded.
  *     produces:
  *       - application/json
  *     responses:
  *       200:
  *         description: |
- *           A minimum US dollar tally of the transaction stream.
+ *           The signature and corresponding address.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - signature
+ *                 - address
+ *               properties:
+ *                 signature:
+ *                   type: string
+ *                   description: |
+ *                     Base64 encoded signature.
+ *                 address:
+ *                   type: string
+ *                   description: |
+ *                     The *overhide-ledger* public address for this login email/provider combination: '0x' prefixed Ethereum address.
  *       401:
  *         description: |
  *            These APIs require bearer tokens to be furnished in an 'Authorization' header as 'Bearer ..' values.  The tokens are to be retrieved from
  *            [https://token.overhide.io](https://token.overhide.io).
  */
 app.get('/sign', token, throttle, async (req, res, next) => {
-  if (await service.tallyMin(req, res)) {
-    next();
-  }
-});
-
-/**
- * @swagger
- * /tallymax/{currency}/{values}:
- *   get:
- *     summary: Retrieve a tally in US dollars converted at a maximum estimated exchange-rate from a stream of time-stamped-values in the provided currency.
- *     description: | 
- *       Retrieve a tally in US dollars converted at a maximum estimated exchange-rate from a stream of time-stamped-values.  A time-stamped-value is
- *       a value transfer at some time-stamp.  There is a certain exchange-rate between `currency` and US dollars at each particular time-stamp.  The
- *       exchange rate fluctuates and may have been different within some time-window before the transaction.  This call will take the highest known
- *       exchange rate during the time-window leading up to a transaction and apply it to the transaction.  Each transaction has its own unique
- *       exchange rate as it has its own unique time-window.
- * 
- *       The result is a maximum converted value in US dollars.
- * 
- *       At present this services uses a time-window of 3 hours leading up to each transaction.  
- * 
- *       Rate limits:  30 calls / minute / IP (across all overhide APIs)
- *     parameters:
- *       - in: path
- *         name: currency
- *         required: true
- *         schema:
- *           type: string
- *         description: |
- *            Currency and denomination of the transactions.
- * 
- *            Supported currencies/denominations:
- * 
- *              * "eth" -- ethers
- *              * "wei" -- ethereum `wei`
- *              * "btc" -- bitcoin
- *              * "sat" -- bitcoin `satoshis`
- *       - in: path
- *         name: values
- *         required: true
- *         schema:
- *           type: string
- *         description: |
- *            Comma separated list of ISO 8601 UTC time-stamps matching the pattern 'YYYY-MM-DDThh:mm:ss.fffZ' prefixed with a `<amount>@`
- *            `currency` value.  E.g. `1200000000000000000@2020-01-04T11:00:00.000Z` for a currency of `wei` signifies a transaction of 1.2 ethers
- *            on April first at 11 (UTC).            
- * 
- *            Each time-stamp is a string in [ISO 8601/RFC3339 format](https://xml2rfc.tools.ietf.org/public/rfc/html/rfc3339.html#anchor14).
- *     produces:
- *       - application/json
- *     responses:
- *       200:
- *         description: |
- *           A maximum US dollar tally of the transaction stream.
- *       401:
- *         description: |
- *            These APIs require bearer tokens to be furnished in an 'Authorization' header as 'Bearer ..' values.  The tokens are to be retrieved from
- *            [https://token.overhide.io](https://token.overhide.io).
- */
-app.get('/get', token, throttle, async (req, res, next) => {
-  if (await service.tallyMax(req, res)) {
-    next();
-  };  
+  await service.sign(req, res, next);
 });
 
 // SERVER LIFECYCLE

@@ -103,12 +103,12 @@ class Database {
    * @param {string} provider -- provider name such as "live.com" or "google.com"
    * @returns {string} "0x.." prefixed secret.
    */
-   async getRates(emailhash, provider) {
+   async get(emailhash, provider) {
     this[checkInit]();
     try {
       const params = [emailhash.slice(2), provider];
       const query = `SELECT secret FROM socials WHERE emailhash = decode($1,'hex') and provider = $2`;
-      let result = await this[ctx].db.query(query);
+      let result = await this[ctx].db.query(query, params);
       if (result.rowCount == 0) {
         return null;
       }

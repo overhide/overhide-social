@@ -76,13 +76,9 @@ class Swagger {
             <a href="https://overhide.io" target="_blank">overhide.io</a> is a free and open-sourced (mostly) ecosystem of widgets, a front-end library, and back-end services &mdash; to make addition of "logins" and "in-app-purchases" (IAP) to your app as banal as possible.
             <hr/><br/>
 
-            API to retrieve exchange rates between specified currencies and US dollars.
+            API that keeps *overhide-ledger* signing keys behind a social login.
 
-            This API is written in support of other APIs and widgets for [https://overhide.io](https://overhide.io) and the [ledgers.js](https://www.npmjs.com/package/ledgers.js) library.
-
-            US dollars are the normalizing currency in *overhide*.
-
-            See [this blog post](https://overhide.io//2021/04/25/social.html) for more details.
+            This API is written in support of the *overhide-ledgers* APIs and widgets for [https://overhide.io](https://overhide.io) and the [ledgers.js](https://www.npmjs.com/package/ledgers.js) library.
 
             These APIs require bearer tokens to be furnished in an 'Authorization' header as 'Bearer ..' values.  The tokens are to be retrieved from
             [https://token.overhide.io](https://token.overhide.io).

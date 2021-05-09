@@ -20,6 +20,8 @@ const KEYV_URI = process.env.KEYV_URI || process.env.npm_config_KEYV_URI || proc
 const KEYV_KARNETS_NAMESPACE = process.env.KEYV_KARNETS_NAMESPACE || process.env.npm_config_KEYV_KARNETS_NAMESPACE || process.env.npm_package_config_KEYV_KARNETS_NAMESPACE || 'karnets';
 const KEYV_KARNETS_TTL_MILLIS = process.env.KEYV_KARNETS_TTL_MILLIS || process.env.npm_config_KEYV_KARNETS_TTL_MILLIS || process.env.npm_package_config_KEYV_KARNETS_TTL_MILLIS || 120000;
 
+var returnGoodToken = true;
+
 // good token below:
 //
 // {
@@ -36,16 +38,16 @@ const KEYV_KARNETS_TTL_MILLIS = process.env.KEYV_KARNETS_TTL_MILLIS || process.e
 // }.[Signature]
 
 mock('node-fetch', async (url) => {
-  if (url.match(/token.*goodCode/)) {
+  if (url.match(/token/) && returnGoodToken) {
     return {
       status: 200,
       text: async () => 'OK',
       json: async () => {
-        id_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJlbWFpbHMiOlsiZm9vQGJhci5jb20iXSwiaWRwIjoibGl2ZS5jb20ifQ.43i8B6VywQv973oJoy5GF2C3hAHnlhB5XJbVpmMZjPo'
+        return {id_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJlbWFpbHMiOlsiZm9vQGJhci5jb20iXSwiaWRwIjoibGl2ZS5jb20ifQ.43i8B6VywQv973oJoy5GF2C3hAHnlhB5XJbVpmMZjPo'};
       }
     };
   }
-  if (url.match(/token.*badCode/)) {
+  if (url.match(/token/) && !returnGoodToken) {
     return {
       status: 400,
       text: async () => 'invalid_grant',
@@ -86,6 +88,7 @@ const karnets = require('../../main/js/lib/karnets.js').init(ctx_config);
 const service = require('../../main/js/lib/service.js').init(ctx_config);
 
 const goodKarnet = `karnet_${new Date()}`;
+const badKarnet = `badKarnet_${new Date()}`;
 
 describe('service tests', () => {
 
@@ -110,8 +113,105 @@ describe('service tests', () => {
         }
       }
   
-      service.redirect(req, res, () => {});
+      await service.redirect(req, res, () => {});
     })();
   });
+
+  it('should retrieve a signature for previous goodKarnet', (done) => {
+    (async () => {
+
+      req = {
+        query: {
+          message: crypto.btoa('message'),
+          karnet: goodKarnet
+        }
+      }
+
+      res = {
+        status: (code) => {
+          return {
+            send: (result) => {
+              if (code == 200)  {                
+                assert.isTrue(crypto.isSignatureValid(result.address, crypto.atob(result.signature), 'message'));
+                done();
+              };    
+            }
+          }
+        }        
+      }
+  
+      await service.sign(req, res, () => {});
+    })();
+  });  
+
+  it('should get token of already registered secret, cache karnet, and return page raising oh$-login-success event', (done) => {
+    (async () => {
+
+      req = {
+        query: {
+          code: 'goodCode',
+          state: goodKarnet
+        }
+      }
+
+      res = {
+        render: (template, opts) => {
+          assert.isTrue(/login-success.html/.test(template));
+          done();
+        }
+      }
+  
+      await service.redirect(req, res, () => {});
+    })();
+  });  
+
+  it('should return oh$-login-failed on bad token', (done) => {
+    (async () => {
+
+      returnGoodToken = false; 
+
+      req = {
+        query: {
+          code: 'goodCode',
+          state: goodKarnet
+        }
+      }
+
+      res = {
+        render: (template, opts) => {
+          assert.isTrue(/login-fail.html/.test(template));
+          done();
+        }
+      }
+  
+      await service.redirect(req, res, () => {});
+    })();
+  });  
+
+  it('should get 403 when karnet not cached', (done) => {
+    (async () => {
+
+      req = {
+        query: {
+          message: 'message',
+          karnet: badKarnet
+        }
+      }
+
+      res = {
+        status: (code) => {
+          return {
+            send: (result) => {
+              if (code == 403)  {
+                done();
+              };    
+            }
+          }
+        }        
+      }
+  
+      await service.sign(req, res, () => {});
+    })();
+  });  
 })
 

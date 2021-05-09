@@ -115,13 +115,21 @@ class Crypto {
   }
 
   /**
-   * @param {string} key - for signing ('0x..')
+   * @param {string} key - private key for signing ('0x..')
    * @param {string} message - to be signed (usually hash of payload)
    * @returns {string} signed payload
    */
   sign(key, message) {
     this[checkInit]();
     return web3.eth.accounts.sign(message, key).signature;
+  }
+
+  /**
+   * @param {string} secret - to get address out of, '0x..' prefixed.
+   * @returns {string} the address, '0x..' prefixed.
+   */
+  secretToAddress(secret) {
+    return web3.eth.accounts.privateKeyToAccount(secret).address;
   }
 
   /**
@@ -134,9 +142,22 @@ class Crypto {
   isSignatureValid(address, signature, message) {
     this[checkInit]();
     var target = web3.eth.accounts.recover(message, signature).toLowerCase();
-    return (address == target);
+    return (address.toLowerCase() == target);
   }
 
+  /**
+   * @param {string} what - base64 string to convert text
+   */
+  atob(what) {
+    return Buffer.from(what, 'base64').toString();
+  }
+
+  /**
+   * @param {string} what - text to convert to base64
+   */
+  btoa(what) {
+    return Buffer.from(what).toString('base64');
+  }  
 }
 
 module.exports = (new Crypto());
