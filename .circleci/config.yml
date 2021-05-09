@@ -16,6 +16,8 @@ jobs:
             printf "POSTGRES_USER=adam\n" >> .npmrc.dev;
             printf "POSTGRES_PASSWORD=c0c0nut\n" >> .npmrc.dev;
             printf "KEYV_URI=redis://redis:6379\n" >> .npmrc.dev;
+            printf "SALT=salt\n" >> .npmrc.dev;
+            printf "INTERNAL_TOKEN=fake\n" >> .npmrc.dev;
             cat .npmrc.dev   
       - run:
           shell: /bin/sh
