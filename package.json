@@ -52,8 +52,8 @@
     "DEBUG": "",
     "RATE_LIMIT_WINDOW_MS": 1000,
     "RATE_LIMIT_MAX_REQUESTS_PER_WINDOW": 100,
-    "RATE_LIMIT_REDIS_URI": "",
-    "RATE_LIMIT_REDIS_NAMESPACE": "",
+    "RATE_LIMIT_REDIS_URI": "redis://redis:6379",
+    "RATE_LIMIT_REDIS_NAMESPACE": "oh-public-rate-limit",
     "POSTGRES_HOST": "localhost",
     "POSTGRES_PORT": 5432,
     "POSTGRES_DATABASE": "",
@@ -63,9 +63,9 @@
     "SALT": "",
     "TOKEN_URL": "https://token.overhide.io/validate",
     "AUTH_TOKEN_URL": "",
-    "KEYV_URI": "",
-    "KEYV_KARNETS_NAMESPACE": "",
-    "KEYV_KARNETS_TTL_MILLIS": ""
+    "KEYV_URI": "redis://redis:6379",
+    "KEYV_KARNETS_NAMESPACE": "karnets",
+    "KEYV_KARNETS_TTL_MILLIS": "120000"
   },
   "devDependencies": {
     "chai": "4.2.0",
