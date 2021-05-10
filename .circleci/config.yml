@@ -18,7 +18,7 @@ jobs:
             printf "KEYV_URI=redis://redis:6379\n" >> .npmrc.dev;
             printf "SALT=salt\n" >> .npmrc.dev;
             printf "INTERNAL_TOKEN=fake\n" >> .npmrc.dev;
-            printf "AUTH_TOKEN_URL=https://fake\n" >> .npmrc.dev;
+            printf "AUTH_TOKEN_URL={\"microsoft\": \"https://token\", \"google\": \"https://token\"}\n" >> .npmrc.dev;
             printf "AUTH_CLIENT_ID=fake\n" >> .npmrc.dev;
             printf "AUTH_CLIENT_SECRET=fake\n" >> .npmrc.dev;
             printf "AUTH_REDIRECT_URI=https://localhost:8120/redirect\n" >> .npmrc.dev;
