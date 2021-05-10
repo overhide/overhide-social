@@ -164,6 +164,26 @@ app.get('/redirect/:provider',  async (req, res, next) => {
 
 /**
  * @swagger
+ * /logout:
+ *   get:
+ *     summary: AAD B2C logout redirect endpoint.
+ *     description: | 
+ *       AAD B2C logout redirect endpoint.
+ * 
+ *       Issues the `oh$-logout-success` event.
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: |
+ *           An HTML page that raises the `oh$-logout-success` event.
+ */
+ app.get('/logout',  async (req, res, next) => {
+  res.render('logout-success.html');
+});
+
+/**
+ * @swagger
  * /sign:
  *   get:
  *     summary: Pass in the client `karnet` (token) GUID and a `message` to sign -- signs the message with credentials tracked by this service for the previously logged in `karnet`.
