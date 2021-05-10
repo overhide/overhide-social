@@ -52,7 +52,7 @@ class Karnets {
       salt: salt,
       uri: keyvUri,
       namespace: keyvKarnetsNamespace,
-      ttl: keyvKarnetsTtlMillis
+      ttl: parseInt(keyvKarnetsTtlMillis)
     };
 
     this[ctx].keyv = this[getKeyv]();
@@ -84,7 +84,7 @@ class Karnets {
     this[checkInit]();
     debug(`store secret for ${karnet}`);
     const encrypted = crypto.symmetricEncrypt(secret, this[ctx].salt);
-    await this[ctx].keyv.set(karnet, encrypted,this[ctx].ttl);
+    await this[ctx].keyv.set(karnet, encrypted, this[ctx].ttl);
   }
 
   /**

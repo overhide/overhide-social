@@ -64,7 +64,7 @@ const ctx_config = {
   isTest: !ISPROD,
   tokenUrl: TOKEN_URL,
   internalToken: INTERNAL_TOKEN,
-  authTokenUrl: AUTH_TOKEN_URL,
+  authTokenUrl: JSON.parse(AUTH_TOKEN_URL),
   authClientId: AUTH_CLIENT_ID,
   authClientSecret: AUTH_CLIENT_SECRET,
   authRedirectUri: AUTH_REDIRECT_URI,
@@ -125,6 +125,18 @@ app.get('/swagger.json', throttle, (req, res) => {
  * 
  *       If this redirect is for a new email/provider combination (new login to the system), it will genereate the credentials for signing.
  *     parameters:
+ *       - in: path
+ *         name: provider
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: |
+ *            Which social login provider's authN is this redirect for?
+ * 
+ *            Supported providers:
+ * 
+ *              * "microsoft"
+ *              * "google"
  *       - in: query
  *         name: code
  *         required: true
@@ -146,7 +158,7 @@ app.get('/swagger.json', throttle, (req, res) => {
  *         description: |
  *           An HTML page that either raises the `oh$-login-failed` event upon login failure or the `oh$-login-success` event on login success.
  */
-app.get('/redirect',  async (req, res, next) => {
+app.get('/redirect/:provider',  async (req, res, next) => {
   await service.redirect(req, res, next);
 });
 
@@ -201,6 +213,9 @@ app.get('/redirect',  async (req, res, next) => {
  *         description: |
  *            These APIs require bearer tokens to be furnished in an 'Authorization' header as 'Bearer ..' values.  The tokens are to be retrieved from
  *            [https://token.overhide.io](https://token.overhide.io).
+ *       403:
+ *         description: |
+ *            Unauthorized `karnet` provided (expired?).
  */
 app.get('/sign', token, throttle, async (req, res, next) => {
   await service.sign(req, res, next);

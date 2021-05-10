@@ -46,7 +46,7 @@ See [.npmrc.sample](.npmrc.sample).
 
 Some call-outs:
 
-*AUTH_TOKEN_URL* is the token URL to retrieve token from an *authorization code* (e.g. from AAD B2C)
+*AUTH_TOKEN_URL* JSON mapping provider-keys (e.g. 'microsoft', 'google') to token endpoint URLs; allowin retrieval of tokens from an *authorization code* for Microsoft social-login (e.g. from AAD B2C)
 *AUTH_CLIENT_ID* is the client ID (e.g. from AAD B2C)
 *AUTH_CLIENT_SECRET* is the client secret (e.g. from AAD B2C)
 *AUTH_REDIRECT_URI* is this service's redirect URI (e.g. as setup with AAD B2C)

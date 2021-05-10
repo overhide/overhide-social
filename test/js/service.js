@@ -12,7 +12,7 @@ const POSTGRES_SSL = process.env.POSTGRES_SSL || process.env.npm_config_POSTGRES
 
 const SALT = process.env.SALT || process.env.npm_config_SALT || process.env.npm_package_config_SALT || 'salt';
 
-const AUTH_TOKEN_URL = process.env.AUTH_TOKEN_URL || process.env.npm_config_AUTH_TOKEN_URL || process.env.npm_package_config_AUTH_TOKEN_URL || 'https://token';
+const AUTH_TOKEN_URL = process.env.AUTH_TOKEN_URL || process.env.npm_config_AUTH_TOKEN_URL || process.env.npm_package_config_AUTH_TOKEN_URL || `{"microsoft": "https://token", "google": "https://token"}`;
 const AUTH_CLIENT_ID = process.env.AUTH_CLIENT_ID || process.env.npm_config_AUTH_CLIENT_ID || process.env.npm_package_config_AUTH_CLIENT_ID || 'clientId';
 const AUTH_CLIENT_SECRET = process.env.AUTH_CLIENT_SECRET || process.env.npm_config_AUTH_CLIENT_SECRET || process.env.npm_package_config_AUTH_CLIENT_SECRET || 'clientSecret';
 const AUTH_REDIRECT_URI = process.env.AUTH_REDIRECT_URI || process.env.npm_config_AUTH_REDIRECT_URI || process.env.npm_package_config_AUTH_REDIRECT_URI || 'https://localhost:8120/redirect';
@@ -71,7 +71,7 @@ const ctx_config = {
   pgpassword: POSTGRES_PASSWORD,
   pgssl: POSTGRES_SSL,
   salt: SALT,
-  authTokenUrl: AUTH_TOKEN_URL,
+  authTokenUrl: JSON.parse(AUTH_TOKEN_URL),
   authClientId: AUTH_CLIENT_ID,
   authClientSecret: AUTH_CLIENT_SECRET,
   authRedirectUri: AUTH_REDIRECT_URI,
@@ -100,6 +100,9 @@ describe('service tests', () => {
     (async () => {
 
       req = {
+        params: {
+          provider: 'microsoft'
+        },
         query: {
           code: 'goodCode',
           state: goodKarnet
@@ -121,6 +124,9 @@ describe('service tests', () => {
     (async () => {
 
       req = {
+        params: {
+          provider: 'microsoft'
+        },
         query: {
           message: crypto.btoa('message'),
           karnet: goodKarnet
@@ -148,6 +154,9 @@ describe('service tests', () => {
     (async () => {
 
       req = {
+        params: {
+          provider: 'microsoft'
+        },
         query: {
           code: 'goodCode',
           state: goodKarnet
@@ -171,6 +180,9 @@ describe('service tests', () => {
       returnGoodToken = false; 
 
       req = {
+        params: {
+          provider: 'microsoft'
+        },
         query: {
           code: 'goodCode',
           state: goodKarnet
@@ -192,6 +204,9 @@ describe('service tests', () => {
     (async () => {
 
       req = {
+        params: {
+          provider: 'microsoft'
+        },
         query: {
           message: 'message',
           karnet: badKarnet

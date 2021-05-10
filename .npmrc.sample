@@ -19,7 +19,7 @@ SALT=c0c0nut
 TOKEN_URL=https://token.overhide.io/validate
 INTERNAL_TOKEN=fake
 
-AUTH_TOKEN_URL=https://<tenant>.b2clogin.com/overhide.onmicrosoft.com/<policy-name>/oauth2/v2.0/token
+AUTH_TOKEN_URL={"microsoft": "https://<tenant>.b2clogin.com/overhide.onmicrosoft.com/<policy-name>/oauth2/v2.0/token", "google": "https://<tenant>.b2clogin.com/overhide.onmicrosoft.com/<policy-name>/oauth2/v2.0/token"}
 AUTH_CLIENT_ID=
 AUTH_CLIENT_SECRET=
 AUTH_REDIRECT_URI=https://localhost:8120/redirect

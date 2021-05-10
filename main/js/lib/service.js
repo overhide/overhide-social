@@ -64,11 +64,13 @@ class Service {
    async redirect(req, res, next) {
     this[checkInit]();
     try {
+      if (!('provider' in req.params)) throw 'no provider';
       if (!('code' in req.query)) throw 'no code';
       if (!('state' in req.query)) throw 'no karnet';
+      const providerParam = req.params.provider.toLowerCase();
       const code = req.query['code'];
       const karnet = req.query['state'];
-      const {email, provider} = await auth.getToken(code);
+      const {email, provider} = await auth.getToken(code, providerParam);
       if (!email || !provider) throw 'bad token, no email or provider';
       let secret = await database.get(crypto.hash(email, this[ctx].salt), provider);
       if (!secret) {

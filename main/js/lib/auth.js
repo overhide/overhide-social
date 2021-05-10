@@ -34,7 +34,8 @@ class Auth {
    * Initialize this library: this must be the first method called somewhere from where you're doing context & dependency
    * injection.
    * 
-   * @param {string} authTokenUrl - URL for validating tokens
+   * @param {} authTokenUrl - provider keys to token URL mappings for validating tokens
+   * @param {string} authTokenUrlGoogle - URL for validating tokens
    * @param {string} authClientId
    * @param {string} authClientSecret
    * @param {stirng} authRedirectUri
@@ -66,16 +67,21 @@ class Auth {
    * See if we can retrieve the token.
    * tokenUrl, 
    * @param {}  code
+   * @param {string} provider -- authN provider, one of the keys in `this[ctx].authTokenUrl`
    * @returns {{email:..,provider:..}} the token data
    */
-  async getToken(code) {
+  async getToken(code, provider) {
     this[checkInit]();
-    const content = `grant_type=authorization_code&client_id=${this[ctx].authClientId}&client_secret=${this[ctx].authClientSecret}&scope=${this[ctx].authClientId}&code=${code}&redirect_uri=${this[ctx].authRedirectUri}`;
-    let response = await fetch(this[ctx].authTokenUrl, content, {
-      method: 'POST', headers: {
+    if (!(provider in this[ctx].authTokenUrl)) throw `no such provider ${provider}`
+    const url = this[ctx].authTokenUrl[provider];
+    const content = `grant_type=authorization_code&client_id=${this[ctx].authClientId}&client_secret=${this[ctx].authClientSecret}&scope=${this[ctx].authClientId}&code=${code}&redirect_uri=${encodeURIComponent(this[ctx].authRedirectUri)}`;
+    let response = await fetch(url, {
+      method: 'POST', 
+      headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json'
-      }
+      },
+      body: content
     });
     if (response.status != 200) {
       let text = await response.text();
@@ -93,7 +99,7 @@ class Auth {
       this[metrics].fail++;
       throw err;
     }
-  }
+}
 
   /**
    * @returns {{errors:.., errorsDelta:..}} metrics object.
