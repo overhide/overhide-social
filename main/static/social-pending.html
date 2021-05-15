@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .header {
+          font-size: larger;
+          margin-bottom: 2em;
+        }        
+
+        .info {
+          font-size: smaller;
+        }        
+
+        html,body {
+          font-family: Lato;
+          font-variant: small-caps;
+        }
+
+        .panel {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .bottom-buttons {
+          display: flex; 
+          justify-content: space-evenly; 
+          margin: 20px;          
+        }
+
+        .icon {
+            position: relative;
+        }
+        
+        .icon i {
+            right: 0px;
+            position: absolute;
+            padding: 10px;
+            color: green;
+            min-width: 50px;
+            text-align: center;
+            cursor:pointer;
+        }
+
+        input {
+          font-variant: normal;
+        }
+    </style>
+  </head>
+
+  <body>
+    <div class="panel">
+      <div class="header">
+        Pending login in other tab/window.
+      </div>
+      <div>
+        <i class="fa fa-spinner w3-spin" style="font-size:64px"></i>
+      </div>      
+    </div>
+  </body>
+  
+  <script>
+    const check = () => {
+      const state = window.localStorage.getItem('overhide-social-state')
+      if (state == 'success') {
+        window.parent.postMessage({event: 'oh$-login-success', detail:'ok'}, '*');
+        return;
+      } else if (state == 'failed') {
+        window.parent.postMessage({event: 'oh$-login-failed', detail:'ok'}, '*');
+        return;
+      }
+      setTimeout(check, 500);
+    }
+
+    window.onload = function () {
+      window.localStorage.removeItem('overhide-social-state');
+      check();
+    }
+  </script>
+</html>

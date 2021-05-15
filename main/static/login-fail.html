@@ -2,7 +2,8 @@
 <html>
 <body>
 <script>
-  window.parent.document.dispatchEvent(new CustomEvent('oh$-login-failed'));
+  window.localStorage.setItem('overhide-social-state','failed');
+  window.close();
 </script>
 </body>
 </html>

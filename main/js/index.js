@@ -156,7 +156,7 @@ app.get('/swagger.json', throttle, (req, res) => {
  *     responses:
  *       200:
  *         description: |
- *           An HTML page that either raises the `oh$-login-failed` event upon login failure or the `oh$-login-success` event on login success.
+ *           An HTML page that sets `window.localStorage.setItem('overhide-social-state','error')` on error or `window.localStorage.setItem('overhide-social-state','success')` on login success, and subsequently closes the browser window with `window.close()`.
  */
 app.get('/redirect/:provider',  async (req, res, next) => {
   await service.redirect(req, res, next);
@@ -170,16 +170,40 @@ app.get('/redirect/:provider',  async (req, res, next) => {
  *     description: | 
  *       AAD B2C logout redirect endpoint.
  * 
- *       Issues the `oh$-logout-success` event.
+ *       Issues a `message` event with `{event: 'oh$-logout-success', detail:'ok'}` payload.
  *     produces:
  *       - application/json
  *     responses:
  *       200:
  *         description: |
- *           An HTML page that raises the `oh$-logout-success` event.
+ *           An HTML page that raises the `message` event with `{event: 'oh$-logout-success', detail:'ok'}` payload.
  */
  app.get('/logout',  async (req, res, next) => {
   res.render('logout-success.html');
+});
+
+/**
+ * @swagger
+ * /pending:
+ *   get:
+ *     summary: Provides a 'pending' page that waits on the redirect endpoint then raises the `oh$-login-success` event.
+ *     description: | 
+ *       This is used by [ledgers.js](https://www.npmjs.com/package/ledgers.js).
+ * 
+ *       Renders a page that does the following:
+ *         - clears overhide-social-state: `window.localStorage.removeItem('overhide-social-state')`
+ *         - renders a "pending" message
+ *         - on a timer starts checking for availability of `window.localStorage.getItem('overhide-social-state')`
+ *         - once available, raises a `message` event with either 'oh$-login-success' or 'oh$-login-failed' as `{event: ..}` payload depending on state: i.e. `window.parent.postMessage({event: 'oh$-login-success'}, '*');)`
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: |
+ *           An HTML page that raises the `message` event with either 'oh$-login-success' or 'oh$-login-failed' as `{event: ..}` payload.
+ */
+ app.get('/pending',  async (req, res, next) => {
+  res.render('social-pending.html');
 });
 
 /**

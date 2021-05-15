@@ -2,7 +2,8 @@
 <html>
 <body>
 <script>
-  window.parent.document.dispatchEvent(new CustomEvent('oh$-login-success'));
+  window.localStorage.setItem('overhide-social-state','success');
+  window.close();
 </script>
 </body>
 </html>
