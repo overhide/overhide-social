@@ -81,15 +81,15 @@ class Database {
   /**
    * Add 
    * 
-   * @param {string} emailhash -- "0x.." prefixed hash
+   * @param {string} emailhash -- prefixed hash of email (hex string no "0x" prefix)
    * @param {string} provider -- provider name such as "live.com" or "google.com"
-   * @param {string} secret -- "0x.." prefixed secret
+   * @param {Buffer} secret -- encrypted secret as a byte stream
    */
-  async add(emailhash, provider, secret) {
+  async add(emailhash, provider, secretBuffer) {
     this[checkInit]();
     try {
-      const params = [emailhash.slice(2), provider, secret.slice(2)];
-      const query = `INSERT INTO socials (emailhash, provider, secret) VALUES (decode($1,'hex'), $2, decode($3,'hex')) ON CONFLICT (emailhash, provider) DO NOTHING;`;
+      const params = [emailhash, provider, secretBuffer];
+      const query = `INSERT INTO socials (emailhash, provider, secret) VALUES (decode($1,'hex'), $2, $3) ON CONFLICT (emailhash, provider) DO NOTHING;`;
       await this[ctx].db.query(query, params);
     } catch (err) {
       throw `insertion error :: ${String(err)}`;
@@ -99,20 +99,20 @@ class Database {
   /**
    * Get 
    * 
-   * @param {string} emailhash -- "0x.." prefixed hash
+   * @param {string} emailhash -- prefixed hash of email (hex string no "0x" prefix)
    * @param {string} provider -- provider name such as "live.com" or "google.com"
-   * @returns {string} "0x.." prefixed secret.
+   * @returns {Buffer} encrypted secret as a byte stream
    */
    async get(emailhash, provider) {
     this[checkInit]();
     try {
-      const params = [emailhash.slice(2), provider];
+      const params = [emailhash, provider];
       const query = `SELECT secret FROM socials WHERE emailhash = decode($1,'hex') and provider = $2`;
       let result = await this[ctx].db.query(query, params);
       if (result.rowCount == 0) {
         return null;
       }
-      result = `0x${result.rows[0].secret.toString('hex')}`
+      return result.rows[0].secret
     } catch (err) {
       throw `query error :: ${String(err)}`;
     }

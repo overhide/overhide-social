@@ -72,12 +72,14 @@ class Service {
       const karnet = req.query['state'];
       const {email, provider} = await auth.getToken(code, providerParam);
       if (!email || !provider) throw 'bad token, no email or provider';
-      let secret = await database.get(crypto.hash(email, this[ctx].salt), provider);
-      if (!secret) {
-        secret = crypto.createIdentity().privateKey;
-        await database.add(crypto.hash(email, this[ctx].salt), provider, secret);
+      const hashedEmail = crypto.hash(email, this[ctx].salt);
+      let encryptedSecret = await database.get(hashedEmail, provider);
+      if (!encryptedSecret) {
+        const identity = crypto.createIdentity();
+        encryptedSecret = crypto.symmetricEncrypt(identity.privateKey, this[ctx].salt)
+        await database.add(hashedEmail, provider, encryptedSecret);
       }
-      await karnets.setSecret(karnet, secret);
+      await karnets.setSecret(karnet, encryptedSecret);
       res.render('login-success.html');
     }
     catch(err) {
@@ -101,11 +103,13 @@ class Service {
       if (!('karnet' in req.query)) throw 'no karnet';
       const message = req.query['message'];
       const karnet = req.query['karnet'];
-      const secret = await karnets.getSecret(karnet);
-      if (!secret) {
+      const encryptedSecret = await karnets.getSecret(karnet);
+      if (!encryptedSecret) {
         res.status(403).send();
         return;
       }
+      const secretBuffer = crypto.symmetricDecrypt(encryptedSecret, this[ctx].salt);
+      const secret = secretBuffer.toString();
       const messageText = crypto.atob(message);
       const signatureText = crypto.sign(secret, messageText);
       const signature = crypto.btoa(signatureText);

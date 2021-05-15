@@ -78,20 +78,19 @@ class Karnets {
    * Set secret
    * 
    * @param {string} karnet 
-   * @param {string} secret
+   * @param {BBuffer} encryptedSecret
    */
-   async setSecret(karnet, secret) {
+   async setSecret(karnet, encryptedSecret) {
     this[checkInit]();
     debug(`store secret for ${karnet}`);
-    const encrypted = crypto.symmetricEncrypt(secret, this[ctx].salt);
-    await this[ctx].keyv.set(karnet, encrypted, this[ctx].ttl);
+    await this[ctx].keyv.set(karnet, encryptedSecret, this[ctx].ttl);
   }
 
   /**
    * Get secret
    * 
    * @param {string} karnet 
-   * @returns {string} secret
+   * @returns {Buffer} encryptedSecret
    */
   async getSecret(karnet) {
     this[checkInit]();
@@ -99,8 +98,7 @@ class Karnets {
     if (val) {
       this[metrics].hit++;
       debug(`got secret for karnet ${karnet}`);
-      const decrypted = crypto.symmetricDecrypt(val, this[ctx].salt);
-      return decrypted.toString();
+      return val;
     } else {
       this[metrics].miss++;
       debug(`missed secret for karnet ${karnet}`);
