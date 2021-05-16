@@ -49,16 +49,18 @@ class Token {
    * @param {string} tokenUrl - URL for validating tokens: not used if salt is provided.
    * @param {bool} isTest - is this instance a test instance?
    * @param {string} internalToken - if any, to bypass token + throttle
+   * @param {boolean} skipEnvironmentVerificationForLocalSaltTokens - should the environment of the token issuance versus this service be verified?  Only for local SALT verified tokens.
    * @returns {Token} this
    */
-  init({salt, tokenUrl, isTest, internalToken} = {}) {
+  init({salt, tokenUrl, isTest, internalToken, skipEnvironmentVerificationForLocalSaltTokens = false} = {}) {
     if (salt == null && tokenUrl == null) throw new Error("Either SALT or TOKEN_URL must be specified.");
 
     this[ctx] = {
       salt: salt,
       tokenUrl, tokenUrl,
       isTest: isTest,
-      internalToken: internalToken
+      internalToken: internalToken,
+      skipEnvironmentVerificationForLocalSaltTokens: skipEnvironmentVerificationForLocalSaltTokens
     };
     return this;
   }
@@ -144,7 +146,7 @@ class Token {
       token = crypto.symmetricDecrypt(token, this[ctx].salt);
       token = JSON.parse(token);
       var apikey = token['apikey'];
-      if (this[ctx].isTest !== token['istest']) {
+      if (!this[ctx].skipEnvironmentVerificationForLocalSaltTokens && this[ctx].isTest !== token['istest']) {
         return [false, `evironment mismatch (test token:${token['istest']})(test environment:${this[ctx].isTest})`];
       }
       if ((((new Date()) - Date.parse(token['created'])) / 1000) > token['token_validity_seconds']) {

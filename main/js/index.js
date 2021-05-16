@@ -31,6 +31,7 @@ const ISPROD = process.env.ISPROD || process.env.npm_config_ISPROD || process.en
 const TOKEN_URL = process.env.TOKEN_URL || process.env.npm_config_TOKEN_URL || process.env.npm_package_config_TOKEN_URL;
 const INTERNAL_TOKEN = process.env.INTERNAL_TOKEN || process.env.npm_config_INTERNAL_TOKEN || process.env.npm_package_config_INTERNAL_TOKEN || null;
 const AUTH_TOKEN_URL = process.env.AUTH_TOKEN_URL || process.env.npm_config_AUTH_TOKEN_URL || process.env.npm_package_config_AUTH_TOKEN_URL;
+const SKIP_ENV_VERIFICATION_LOCAL_TOKENS = process.env.SKIP_ENV_VERIFICATION_LOCAL_TOKENS || process.env.npm_config_SKIP_ENV_VERIFICATION_LOCAL_TOKENS || process.env.npm_package_config_SKIP_ENV_VERIFICATION_LOCAL_TOKENS || true;
 const AUTH_CLIENT_ID = process.env.AUTH_CLIENT_ID || process.env.npm_config_AUTH_CLIENT_ID || process.env.npm_package_config_AUTH_CLIENT_ID;
 const AUTH_CLIENT_SECRET = process.env.AUTH_CLIENT_SECRET || process.env.npm_config_AUTH_CLIENT_SECRET || process.env.npm_package_config_AUTH_CLIENT_SECRET;
 const AUTH_REDIRECT_URI = process.env.AUTH_REDIRECT_URI || process.env.npm_config_AUTH_REDIRECT_URI || process.env.npm_package_config_AUTH_REDIRECT_URI;
@@ -64,6 +65,7 @@ const ctx_config = {
   isTest: !ISPROD,
   tokenUrl: TOKEN_URL,
   internalToken: INTERNAL_TOKEN,
+  skipEnvironmentVerificationForLocalSaltTokens: SKIP_ENV_VERIFICATION_LOCAL_TOKENS,
   authTokenUrl: JSON.parse(AUTH_TOKEN_URL),
   authClientId: AUTH_CLIENT_ID,
   authClientSecret: AUTH_CLIENT_SECRET,
