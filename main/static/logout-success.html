@@ -2,7 +2,8 @@
 <html>
 <body>
 <script>
-  window.parent.document.dispatchEvent(new CustomEvent('oh$-logout-success'));
+  window.parent.postMessage({event: 'oh$-logout-success', detail:'ok'}, '*');
+  window.close();
 </script>
 </body>
 </html>
