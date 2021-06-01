@@ -2,7 +2,7 @@
 <html>
 <body>
 <script>
-  window.parent.postMessage({event: 'oh$-logout-success', detail:'ok'}, '*');
+  window.localStorage.setItem('overhide-social-state','logout');
   window.close();
 </script>
 </body>

@@ -73,6 +73,9 @@
       } else if (state == 'failed') {
         window.parent.postMessage({event: 'oh$-login-failed', detail:'ok'}, '*');
         return;
+      } else if (state == 'logout') {
+        window.parent.postMessage({event: 'oh$-logout-success', detail:'ok'}, '*');
+        return;
       }
       setTimeout(check, 500);
     }
