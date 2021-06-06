@@ -161,6 +161,7 @@ app.get('/swagger.json', throttle, (req, res) => {
  *           An HTML page that sets `window.localStorage.setItem('overhide-social-state','error')` on error or `window.localStorage.setItem('overhide-social-state','success')` on login success, and subsequently closes the browser window with `window.close()`.
  */
 app.get('/redirect/:provider',  async (req, res, next) => {
+  log(`/redirect params:${JSON.stringify(req.params)} query:${JSON.stringify(req.query)}`);
   await service.redirect(req, res, next);
 });
 
@@ -181,6 +182,7 @@ app.get('/redirect/:provider',  async (req, res, next) => {
  *           An HTML page that raises the `message` event with `{event: 'oh$-logout-success', detail:'ok'}` payload.
  */
  app.get('/logout',  async (req, res, next) => {
+  log(`/logout params:${JSON.stringify(req.params)} query:${JSON.stringify(req.query)}`);
   res.render('logout-success.html');
 });
 
@@ -264,6 +266,7 @@ app.get('/redirect/:provider',  async (req, res, next) => {
  *            Unauthorized `karnet` provided (expired?).
  */
 app.get('/sign', token, throttle, async (req, res, next) => {
+  log(`/sign params:${JSON.stringify(req.params)} query:${JSON.stringify(req.query)}`);
   await service.sign(req, res, next);
 });
 
