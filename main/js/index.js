@@ -26,6 +26,7 @@ const POSTGRES_DB = process.env.POSTGRES_DB || process.env.npm_config_POSTGRES_D
 const POSTGRES_USER = process.env.POSTGRES_USER || process.env.npm_config_POSTGRES_USER || process.env.npm_package_config_POSTGRES_USER || 'adam';
 const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD || process.env.npm_config_POSTGRES_PASSWORD || process.env.npm_package_config_POSTGRES_PASSWORD || 'c0c0nut';
 const POSTGRES_SSL = process.env.POSTGRES_SSL || process.env.npm_config_POSTGRES_SSL || process.env.npm_package_config_POSTGRES_SSL;
+const INSIGHTS_KEY = process.env.INSIGHTS_KEY || process.env.npm_config_INSIGHTS_KEY || process.env.npm_package_config_INSIGHTS_KEY
 const SALT = process.env.SALT || process.env.npm_config_SALT || process.env.npm_package_config_SALT;
 const ISPROD = process.env.ISPROD || process.env.npm_config_ISPROD || process.env.npm_package_config_ISPROD || false;
 const TOKEN_URL = process.env.TOKEN_URL || process.env.npm_config_TOKEN_URL || process.env.npm_package_config_TOKEN_URL;
@@ -61,6 +62,7 @@ const ctx_config = {
   pguser: POSTGRES_USER,
   pgpassword: POSTGRES_PASSWORD,
   pgssl: !!POSTGRES_SSL,
+  insights_key: INSIGHTS_KEY,
   salt: SALT,
   isTest: !ISPROD,
   tokenUrl: TOKEN_URL,
@@ -76,6 +78,7 @@ const ctx_config = {
 };
 const log = require('./lib/log.js').init(ctx_config).fn("app");
 const debug = require('./lib/log.js').init(ctx_config).debug_fn("app");
+const insights_key = require('./lib/insights.js').init(ctx_config);
 const crypto = require('./lib/crypto.js').init(ctx_config);
 const database = require('./lib/database.js').init(ctx_config);
 const swagger = require('./lib/swagger.js').init(ctx_config);
@@ -85,6 +88,7 @@ const service = require('./lib/service.js').init(ctx_config);
 const token = require('./lib/token.js').check.bind(require('./lib/token.js').init(ctx_config));
 const throttle = require('./lib/throttle.js').check.bind(require('./lib/throttle.js').init(ctx_config));
 log("CONFIG:\n%O", ((cfg) => {
+  cfg.insights_key = cfg.insights_key ? cfg.insights_key.replace(/.(?=.{2})/g,'*') : null; 
   cfg.pgpassword = cfg.pgpassword.replace(/.(?=.{2})/g,'*'); 
   cfg.salt = cfg.salt.replace(/.(?=.{2})/g,'*'); 
   cfg.internalToken = cfg.internalToken.replace(/.(?=.{2})/g,'*'); 
