@@ -1,6 +1,6 @@
 <p align="center"><a href="https://github.com/overhide"><img src="./main/static/lib/logo.png" width="200px"/></a></p>
 
-<p align="center"><a href="https://overhide.io">overhide.io</a></p><p style="width: 500px; margin: auto">A free and open-sourced ecosystem of widgets, a front-end library, and back-end services &mdash; to make addition of "logins" and "in-app-purchases" (IAP) to your app as banal as possible.</p>
+<p align="center"><a href="https://overhide.io">overhide.io</a></p><p style="width: 500px; margin: auto">A free and fully open-sourced ecosystem of widgets, a front-end library, and back-end services &mdash; to make addition of "logins" and "in-app-purchases" (IAP) to your app as banal as possible.</p>
 
 <hr/>
 
@@ -21,6 +21,8 @@ The gist of this flow as it relates to [ledgers.js](https://www.npmjs.com/packag
 
 ![](./docs/overhide-social.png)
 *Figure 1: Shows the gist of this flow.*
+
+> For help, reach out on [r/overhide](https://www.reddit.com/r/overhide/).
 
 # Quick Start Docker
 
