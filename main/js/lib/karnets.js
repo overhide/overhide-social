@@ -87,6 +87,17 @@ class Karnets {
   }
 
   /**
+   * Set secret
+   * 
+   * @param {string} karnet 
+   * @param {BBuffer} encryptedSecret
+   */
+   async deleteSecret(karnet) {
+    this[checkInit]();
+    await this[ctx].keyv.delete(karnet);
+  }
+
+  /**
    * Get secret
    * 
    * @param {string} karnet 

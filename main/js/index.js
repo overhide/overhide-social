@@ -178,6 +178,14 @@ app.get('/redirect/:provider',  async (req, res, next) => {
  *       AAD B2C logout redirect endpoint.
  * 
  *       Issues a `message` event with `{event: 'oh$-logout-success', detail:'ok'}` payload.
+ *     parameters:
+ *       - in: query
+ *         name: karnet
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: |
+ *           The client `karnet` (token) GUID for tracking login/logout. 
  *     produces:
  *       - application/json
  *     responses:
@@ -187,6 +195,7 @@ app.get('/redirect/:provider',  async (req, res, next) => {
  */
  app.get('/logout',  async (req, res, next) => {
   log(`/logout params:${JSON.stringify(req.params)} query:${JSON.stringify(req.query)}`);
+  await service.logout(req, res, next);
   res.render('logout-success.html');
 });
 
@@ -203,6 +212,14 @@ app.get('/redirect/:provider',  async (req, res, next) => {
  *         - renders a "pending" message
  *         - on a timer starts checking for availability of `window.localStorage.getItem('overhide-social-state')`
  *         - once available, raises a `message` event with either 'oh$-login-success' or 'oh$-login-failed' as `{event: ..}` payload depending on state: i.e. `window.parent.postMessage({event: 'oh$-login-success'}, '*');)`
+ *     parameters:
+ *       - in: query
+ *         name: karnet
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: |
+ *           The client `karnet` (token) GUID for tracking login/logout. 
  *     produces:
  *       - application/json
  *     responses:
@@ -211,7 +228,39 @@ app.get('/redirect/:provider',  async (req, res, next) => {
  *           An HTML page that raises the `message` event with either 'oh$-login-success' or 'oh$-login-failed' as `{event: ..}` payload.
  */
  app.get('/pending',  async (req, res, next) => {
-  res.render('social-pending.html');
+  log(`/pending params:${JSON.stringify(req.params)} query:${JSON.stringify(req.query)}`);
+  const karnet = 'karnet' in req.query ? req.query['karnet'] : '';
+  res.render('social-pending.html', {karnet: karnet});
+});
+
+/**
+ * @swagger
+ * /pendingStatus:
+ *   get:
+ *     summary: Pass in the client `karnet` (token) GUID and check cache if we have some result for it such that we can proceed to call `GET /sign` or finish logging out.
+ *     parameters:
+ *       - in: query
+ *         name: karnet
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: |
+ *           The client `karnet` (token) GUID for tracking login/logout. 
+ *     produces:
+ *       - text/plain
+ *     responses:
+ *       200:
+ *         description: |
+ *           A response is available.  Call `GET /sign` or finish logging out.
+ * 
+ *           Payload will be either "success", "failed", or "logout".
+ *       404:
+ *         description: |
+ *           No result yet.  Don't call `GET /sign` yet.
+ */
+ app.get('/pendingStatus', async (req, res, next) => {
+  log(`/pendingStatus params:${JSON.stringify(req.params)} query:${JSON.stringify(req.query)}`);
+  await service.getPendingStatus(req, res, next);
 });
 
 /**
@@ -231,7 +280,7 @@ app.get('/redirect/:provider',  async (req, res, next) => {
  *         schema:
  *           type: string
  *         description: |
- *           The client `karnet` (token) GUID that is logged in and has credentials stored by this service.
+ *           The client `karnet` (token) GUID for tracking login/logout. 
  *       - in: query
  *         name: message
  *         required: true

@@ -65,8 +65,23 @@
   </body>
   
   <script>
-    const check = () => {
-      const state = window.localStorage.getItem('overhide-social-state')
+    var attempt = 0;
+
+    const check = async () => {
+      attempt++;
+
+      let state = window.localStorage.getItem('overhide-social-state')
+      if (!state && attempt % 6 === 0) {
+        let karnet = '<%-karnet%>';
+        state = await fetch(`/pendingStatus?karnet=${karnet}`).then((result) => {
+          if (result.status === 200) {
+            return result.text();
+          } else {
+            return null;
+          }
+        });
+      }
+
       if (state == 'success') {
         window.parent.postMessage({event: 'oh$-login-success', detail:'ok'}, '*');
         return;
@@ -77,7 +92,7 @@
         window.parent.postMessage({event: 'oh$-logout-success', detail:'ok'}, '*');
         return;
       }
-      setTimeout(check, 500);
+      setTimeout(check, 250);
     }
 
     window.onload = function () {

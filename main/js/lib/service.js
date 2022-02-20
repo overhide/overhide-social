@@ -84,9 +84,71 @@ class Service {
     }
     catch(err) {
       debug(`error: ${err}`);
+      await karnets.setSecret(karnet, `FAIL`);
       res.render('login-fail.html');
     }
   }
+
+  /**
+   * Set result to `200/OK` if result is available (regardless good or failed), `404/NOT FOUND` otherwise.
+   * 
+   * @param {{karnet}} req -- where message is base64 encoded.
+   * @param {} res
+   * @param {} next
+   */
+   async getPendingStatus(req, res, next) {
+    this[checkInit]();
+    try {
+      if (!('karnet' in req.query)) {
+        res.status(404).send();
+        return;
+      }
+      const karnet = req.query['karnet'];
+      const value = await karnets.getSecret(karnet);
+      if (!value) {
+        res.status(404).send();
+        return;
+      }
+      switch (value) {
+        case `LOGOUT`:
+          res.status(200).send(`success`);
+          break;
+        case `FAIL`:
+          res.status(200).send(`failed`);
+          break;
+        default:
+          res.status(200).send(`logout`);
+      }
+      return;
+    }
+    catch(err) {
+      debug(`error: ${err}`);
+      res.status(500).send(err);
+    }
+  }  
+
+  /**
+   * Logout
+   * 
+   * @param {{karnet}} req -- 
+   * @param {} res
+   * 
+   * switch@param {} next
+   */
+   async logout(req, res, next) {
+    this[checkInit]();
+    try {
+      if (!('karnet' in req.query)) {
+        return;
+      }
+      const karnet = req.query['karnet'];
+      await karnets.setSecret(karnet, `LOGOUT`);
+      return;
+    }
+    catch(err) {
+      debug(`error: ${err}`);
+    }
+  }  
 
   /**
    * Sign
@@ -103,12 +165,13 @@ class Service {
       if (!('karnet' in req.query)) throw 'no karnet';
       const message = req.query['message'];
       const karnet = req.query['karnet'];
-      const encryptedSecret = await karnets.getSecret(karnet);
-      if (!encryptedSecret) {
+      const value = await karnets.getSecret(karnet);
+      await karnets.deleteSecret(karnet);
+      if (!value || value === `FAIL`) {
         res.status(403).send();
         return;
       }
-      const secretBuffer = crypto.symmetricDecrypt(encryptedSecret, this[ctx].salt);
+      const secretBuffer = crypto.symmetricDecrypt(value, this[ctx].salt);
       const secret = secretBuffer.toString();
       const messageText = crypto.atob(message);
       const signatureText = crypto.sign(secret, messageText);
